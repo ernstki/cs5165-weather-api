@@ -10,17 +10,16 @@ from flask_restful import abort, reqparse, Resource, Api
 app = Flask(__name__)
 api = Api(app)  # Flask-Restful API object
 
-app.debug = True
 app.config.update(
     TEMPLATES_AUTO_RELOAD=True,
-    PROJECT_ROOT=os.path.abspath(os.path.dirname(__file__)),
+    PACKAGE_DIR=os.path.abspath(os.path.dirname(__file__)),
     ERROR_404_HELP=False,
     #EXPLAIN_TEMPLATE_LOADING=True,
 )
 
 # ref: http://pandas.pydata.org/pandas-docs/stable/io.html#specifying-column-data-types
-weather = pd.read_csv('static/daily.csv', header=0,
-                      dtype={'DATE': np.str})
+weather = pd.read_csv(os.path.join(app.config['PACKAGE_DIR'], 'static/daily.csv'),
+                      header=0, dtype={'DATE': np.str})
 
 # A request parser for the POST operation
 postparser = reqparse.RequestParser(trim=True)

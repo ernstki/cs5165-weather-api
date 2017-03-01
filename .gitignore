@@ -1,7 +1,7 @@
 *~
 .*sw?
 venv
-static/vendor
+api/static/vendor
 
 #### joe made this: https://goel.io/joe
 
