@@ -11,4 +11,4 @@ Your assignment will be graded on the following metrics:
 * Are the HTTP codes correct ? Example - 200 for OK. 201 for created. 404 for not found and so on.  
 * Does the REST API accept the inputs as GET or POST parameters?  
 * Is the result well-formed (does it adhere to JSON or XML standards) and returned as an HTTP 200 “Ok” result?  
-* Does the REST API yield results consistent with the same data?  
+* Does the REST API yield results consistent with the same data?

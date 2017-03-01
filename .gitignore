@@ -1,7 +1,7 @@
 *~
 .*sw?
 venv
-api/static/vendor
+weatherapi/static/vendor
 
 #### joe made this: https://goel.io/joe
 
