@@ -97,13 +97,15 @@ a `Data for <date> already exists` message in the JSON response.
 
 + Request (application/json)
 
-        { "DATE": "20170215", "TMAX": 62.0, "TMIN": 45.0 }
+    When attempting to temperature data for date **already in the database**
+    with a POST request, you get an error in the JSON response.
+
+    + Body
+
+            { "DATE": "20170215", "TMAX": 62.0, "TMIN": 45.0 }
 
 
 + Response 400 (application/json)
-
-    When attempting to temperature data for date **already in the database**
-    with a POST request, you get an error in the JSON response.
 
     + Body
 
