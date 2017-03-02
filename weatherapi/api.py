@@ -4,18 +4,16 @@ import sys
 import click
 import pandas as pd
 import numpy as np
-from flask import Flask, request, render_template
+from flask import Flask, Markup, request, render_template
 from flask_restful import abort, reqparse, Resource, Api
 
 app = Flask(__name__)
 api = Api(app)  # Flask-Restful API object
-mydir = os.path.abspath(os.path.dirname(__file__))
 
 app.config.update(
     TEMPLATES_AUTO_RELOAD=True,
-    PACKAGE_DIR=mydir,
     ERROR_404_HELP=False,
-    CSV_FILE=os.path.join(mydir, 'static/daily.csv'),
+    CSV_FILE=os.path.join(app.root_path, 'static/daily.csv'),
     #EXPLAIN_TEMPLATE_LOADING=True,
 )
 
@@ -124,7 +122,25 @@ api.add_resource(Temp, '/historical/<string:date>')
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    from markdown import Markdown
+    #from markdown import Markdown
+
+    mdfile = os.path.join(app.root_path, '..', 'REST.md')
+    with app.open_resource(mdfile, 'r') as f:
+        sourcetext = unicode(f.read(), 'utf-8')
+
+    # Borrowed from https://github.com/skurfer/RenderMarkdown
+    md_ext = ['extra', 'codehilite']
+
+    md = Markdown(extensions=md_ext, output_format='html5')
+
+    # If you needed it, here's how to force a string into UTF-8 format.
+    #     mdown = mdown.decode('utf8', 'ignore')
+    # ...thanks, https://stackoverflow.com/a/20768800
+    #markdown = Markup(linkify(md.convert(sourcetext), skip_pre=True))
+    markdown = Markup(md.convert(sourcetext))
+
+    return render_template('index.html', markdown=markdown)
 
 
 @app.cli.command(with_appcontext=False)
