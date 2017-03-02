@@ -87,13 +87,26 @@ system.
     flask run --host=0.0.0.0  # optionally: --port=5000
     ```
 
+## Running automated tests
+
+The automated tests cover only the requirements of the assignment, and don't
+check any aspect of the web front-end.
+
+```
+flask test
+
+# alternatively, prettier:
+pip install pytest
+pytest tests
+```
+
 ## Other tips
 
 ### Testing the API with [Postman][]
 
 You can use [Postman][] to test requests to the API. The included
-`postman_collection_v1.json` may be imported through the Postman user
-interface, and includes some example queries.
+[`postman_collection_v1.json`](postman_collection_v1.json) may be imported
+through the Postman user interface, and includes some example queries.
 
 ## Credits
 Incorporates [Glyphicons][] and [Bootstrap][] CSS / JS source files, both

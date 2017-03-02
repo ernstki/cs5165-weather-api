@@ -4,7 +4,7 @@ import sys
 import click
 import pandas as pd
 import numpy as np
-from flask import Flask, Markup, request, render_template
+from flask import Flask, Markup, request, render_template, jsonify
 from flask_restful import abort, reqparse, Resource, Api
 
 app = Flask(__name__)
@@ -74,6 +74,9 @@ def df_to_reponse(df):
 
 
 class Temps(Resource):
+    """
+    Access to all historical data; POST to add new records
+    """
     dtypes = {'DATE': str, 'TMAX': float, 'TMIN': float}
 
     def get(self):
@@ -96,6 +99,9 @@ class Temps(Resource):
 
 
 class Temp(Resource):
+    """
+    Access to a single date in ISO8601 (YYYYMMDD) format
+    """
 
     def get(self, date):
         """
@@ -122,6 +128,9 @@ api.add_resource(Temp, '/historical/<string:date>')
 
 @app.route('/')
 def index():
+    """
+    Main site: API documentation in HTML format
+    """
     from markdown import Markdown
     #from markdown import Markdown
 
@@ -141,6 +150,23 @@ def index():
     markdown = Markup(md.convert(sourcetext))
 
     return render_template('index.html', markdown=markdown)
+
+
+@app.route('/help')
+def help():
+    """
+    *You are here: help on available endpoints
+    """
+    func_list = {}
+    for rule in app.url_map.iter_rules():
+        if rule.endpoint != 'static':
+            docstring = app.view_functions[rule.endpoint].__doc__
+
+            if not docstring:
+                docstring = "No help provided for endpoint"
+
+            func_list[rule.rule] = docstring.strip().split('\n')[0]
+    return jsonify(func_list)
 
 
 @app.cli.command(with_appcontext=False)
