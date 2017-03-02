@@ -84,7 +84,7 @@ a `Data for <date> already exists` message in the JSON response.
 
     + Body
 
-             t{"DATE":"20170215","TMAX":62.0,"TMIN":45.0}
+            { "DATE": "20170215", "TMAX": 62.0, "TMIN": 45.0 }
 
 
 + Response 201 (application/json)
@@ -97,7 +97,7 @@ a `Data for <date> already exists` message in the JSON response.
 
 + Request (application/json)
 
-        {"DATE":"20170215","TMAX":62.0,"TMIN":45.0}
+        { "DATE": "20170215", "TMAX": 62.0, "TMIN": 45.0 }
 
 
 + Response 400 (application/json)
