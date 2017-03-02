@@ -1,5 +1,5 @@
 FORMAT: 1A
-HOST: http://polls.apiblueprint.org/
+HOST: http://cs5165ernstki.ddns.net/
 
 # CS5162 Weather API
 
@@ -9,6 +9,9 @@ REST API for historical temperatures (highs and lows) in Cincinnati.
 <table>
     <tr>
         <th align="left">Version</th><th align="left">Description</th>
+    </tr>
+        <tr>
+        <td valign="top">1.0</td><td>Spec matches v0.0.1 of <code>weatherapi</code> code</td>
     </tr>
     <tr>
         <td valign="top">0.1</td><td>Creation of Apiary Project</td>
@@ -56,7 +59,12 @@ a `Data for <date> already exists` message in the JSON response.
 
 + Request (application/json)
 
-        {"DATE":"20170215","TMAX":62.0,"TMIN":45.0}
+    **Note**: Content type `application/x-www-form-urlencoded` is also accepted for
+    POST requests.
+
+    + Body
+
+             t{"DATE":"20170215","TMAX":62.0,"TMIN":45.0}
 
 
 + Response 201 (application/json)
@@ -66,9 +74,6 @@ a `Data for <date> already exists` message in the JSON response.
             {
                 "DATE": "20170215"
             }
-            
-### Add temperature data for date already in the database - POST [POST]
-
 
 + Request (application/json)
 
@@ -77,12 +82,67 @@ a `Data for <date> already exists` message in the JSON response.
 
 + Response 400 (application/json)
 
+    When attempting to temperature data for date **already in the database**
+    with a POST request, you get an error in the JSON response.
+
     + Body
 
             {
                 "message": "Data for 20170215 already exists"
             }
             
+
+## Temperature Data - Add/Retrieve a Single Day [/historical/{date}]
+
+The temperature data for a single date in the past is retrieved by adding `{date}` in
+ISO8601 format (`YYYYMMDD`) to the end of the `/historical/` resource.
+
+Attempting to retrieve dates which don't exist in the datbase will yield a
+`Data for <date> already exists` message in the JSON response.
+
++ Parameters
+
+    + date (string) - date for which to fetch data (`YYYYMMDD` format)
+
+### Get temperatures for a single day in the past [GET]
+
++ Response 200 (application/json)
+
+    + Body
+
+            {
+                "DATE": "20170215",
+                "TMAX": 62.0,
+                "TMIN": 45.0
+            }
+            
++ Response 404 (application/json)
+
+    When attempting to get temperatures for a day **not in the database**,
+    you get an error message in the JSON response.
+    
+    + Body 
+
+            {
+                "message": "No data found for 99990101"
+            }
+            
+### Delete temperature for a single day [DELETE]
+
++ Response 204
+
++ Response 404 (application/json)
+
+    When attempting to delete the record for a day **not in the database**, you
+    get an error message in the JSON response.
+    
+    + Body
+
+            {
+                "message": "No data found for 99990101"
+            }
+
+
 ## Add New Data with GET Request [/historical/{?DATE,TMAX,TMIN}]
 
 For adding new data to the database, the POST method probably makes more sense
@@ -109,58 +169,13 @@ the JSON response.
                 "DATE": "20170215"
             }
 
-### Add temperature data for date already in the database - GET [POST]
-
 + Response 400 (application/json)
+
+    When attempting to temperature data for date **already in the database**
+    with a GET request, you get an error in the JSON response.
 
     + Body
 
             {
                 "message": "Data for 20170215 already exists"
             }
-
-
-## Temperature Data - Single Day [/historical/{date}]
-
-The temperature data for a single date in the past is retrieved by adding `{date}` in
-ISO8601 format (`YYYYMMDD`) to the end of the `/historical/` resource.
-
-Attempting to retrieve dates which don't exist in the datbase will yield a
-`Data for <date> already exists` message in the JSON response.
-
-+ Parameters
-
-    + date (string) - date for which to fetch data (`YYYYMMDD` format)
-
-### Get temperatures for a single day in the past [GET]
-
-
-+ Response 200 (application/json)
-
-    + Body
-
-            {
-                "DATE": "20170215",
-                "TMAX": 62.0,
-                "TMIN": 45.0
-            }
-            
-### Get temperatures for a single day not in the database [GET]
-
-+ Response 404 (application/json)
-
-        {
-            "message": "No data found for 99990101"
-        }
-            
-### Delete temperature for a single day [DELETE]
-
-+ Response 204
-
-### Delete temperature for a day not in the database [DELETE]
-
-+ Response 404 (application/json)
-
-        {
-            "message": "No data found for 99990101"
-        }
