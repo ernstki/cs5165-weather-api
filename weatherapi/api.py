@@ -20,18 +20,17 @@ app.config.update(
 )
 
 # ref: http://pandas.pydata.org/pandas-docs/stable/io.html#specifying-column-data-types
-weather = pd.read_csv(os.path.join(app.config['PACKAGE_DIR'],
-                                   app.config['CSV_FILE']),
+weather = pd.read_csv(app.config['CSV_FILE'],
                       header=0,
                       dtype={'DATE': np.str})
 
 # A request parser for the POST operation
 postparser = reqparse.RequestParser(trim=True)
-postparser.add_argument('DATE', type=str,
+postparser.add_argument('DATE', type=str, required=True,
                          help='Invalid date (expected: YYYYMMDD as string)')
-postparser.add_argument('TMIN', type=float,
+postparser.add_argument('TMIN', type=float, required=True,
                          help='Invalid temperature (expected: floating point)')
-postparser.add_argument('TMAX', type=float,
+postparser.add_argument('TMAX', type=float, required=True,
                         help='Invalid temperature (expected: floating point)')
 
 
@@ -68,8 +67,16 @@ class Temps(Resource):
         return df_to_reponse(weather[['DATE']])
 
     def post(self):
+        """
+        Add a new data to the weather database. Accepts application/json and
+        application/x-www-form-urlencoded content types.
+        """
         global weather
         args = postparser.parse_args()
+
+        #if not request.is_json:
+        #    abort(400, message='POST data is expected to be application/json')
+
         if args.DATE in weather[['DATE']].values:
             abort(400, message='Data for %s already exists' % args.DATE)
 
@@ -109,9 +116,17 @@ def index():
 
 
 @app.cli.command(with_appcontext=False)
+def test():
+    """
+    Runs automated (unittest) tests
+    """
+    os.system('python -m unittest -b -v tests')
+
+
+@app.cli.command(with_appcontext=False)
 def clean():
     """
-    Clean up .pyc files (and other detritus)
+    Cleans up .pyc files (and other detritus).
     """
     click.secho('Tidying up the project directories...', fg='yellow')
     os.chdir(app.config['PROJECT_ROOT'])
