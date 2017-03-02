@@ -6,25 +6,36 @@ HOST: http://cs5165ernstki.ddns.net/
 REST API for historical temperatures (highs and lows) in Cincinnati, O. For
 Prof. Tatavarty's 17FS_CS5165 Cloud Computing course.
 
-A dynamic version of this API documentation in [Apiary Blueprint][apibp]
-format is available at <http://docs.cs5165weatherapi.apiary.io>. The Apiary
-docs includes a test console capable of querying against API of the [live
-server on EC2][ec2].
+[A dynamic version][apiary] of this API documentation is available in
+[API Blueprint][apibp] format at apiary.io. The Apiary docs includes a test
+console capable of querying against API of the [live server on EC2][ec2].
 
+<table class="table">
+  <thead>
+    <tr>
+      <th align="left">Version</th><th align="left">Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td valign="top">1.0</td>
+      <td>
+        Spec matches v0.0.1 of <code>weatherapi</code> code
+      </td>
+    </tr>
+    <tr>
+      <td valign="top">0.1</td><td>Creation of Apiary Project</td>
+    </tr>
+  </tbody>
+</table>
+
+[Source code][source] on GitHub, [MIT licensed][license].
+
+[apiary]: http://docs.cs5165weatherapi.apiary.io
 [apibp]: https://apiblueprint.org/documentation/specification.html
 [ec2]: http://cs5165ernstki.ddns.net
-
-<table>
-    <tr>
-        <th align="left">Version</th><th align="left">Description</th>
-    </tr>
-        <tr>
-        <td valign="top">1.0</td><td>Spec matches v0.0.1 of <code>weatherapi</code> code</td>
-    </tr>
-    <tr>
-        <td valign="top">0.1</td><td>Creation of Apiary Project</td>
-    </tr>
-</table>
+[source]: https://github.com/ernstki/cs5165-weather-api
+[license]: https://github.com/ernstki/cs5165-weather-api/blob/master/LICENSE.txt
 
 
 ## Historical Temperatures Collection [/historical/]
