@@ -6,9 +6,10 @@ HOST: http://cs5165ernstki.ddns.net/
 REST API for historical temperatures (highs and lows) in Cincinnati, O. For
 Prof. Tatavarty's 17FS_CS5165 Cloud Computing course.
 
-API documentation in [Apiary Blueprint][apibp] format is available at
-<http://docs.cs5165weatherapi.apiary.io>. The console on the Apiary "docs" site
-also allows queries against API of the [live server on EC2][ec2].
+A dynamic version of this API documentation in [Apiary Blueprint][apibp]
+format is available at <http://docs.cs5165weatherapi.apiary.io>. The Apiary
+docs includes a test console capable of querying against API of the [live
+server on EC2][ec2].
 
 [apibp]: https://apiblueprint.org/documentation/specification.html
 [ec2]: http://cs5165ernstki.ddns.net
