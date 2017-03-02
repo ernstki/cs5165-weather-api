@@ -42,6 +42,24 @@ def check_date(date):
         abort(404, message="No data found for %s" % date)
 
 
+def add_date():
+    """
+    Add a new date given either a GET or a POST (application/json or
+    application/x-www-form-urlencoded) request.
+    """
+    global weather
+    args = postparser.parse_args()
+
+    if args.DATE in weather[['DATE']].values:
+        abort(400, message='Data for %s already exists' % args.DATE)
+
+    s = pd.Series(args)
+    assert s.any()
+    weather = weather.append(s, ignore_index=True)
+
+    return {'DATE': args.DATE}, 201
+
+
 # props to https://stackoverflow.com/a/26961568
 def df_to_reponse(df):
     """
@@ -62,31 +80,25 @@ class Temps(Resource):
 
     def get(self):
         """
-        Return all dates for which weather data exists
+        Return all dates for which weather data exists, unless query string
+        parameters exist, in which case add the given date + temps.
         """
-        return df_to_reponse(weather[['DATE']])
+        if request.args:
+            return add_date()
+        else:
+            global weather
+            return df_to_reponse(weather[['DATE']])
 
     def post(self):
         """
         Add a new data to the weather database. Accepts application/json and
         application/x-www-form-urlencoded content types.
         """
-        global weather
-        args = postparser.parse_args()
-
-        #if not request.is_json:
-        #    abort(400, message='POST data is expected to be application/json')
-
-        if args.DATE in weather[['DATE']].values:
-            abort(400, message='Data for %s already exists' % args.DATE)
-
-        s = pd.Series(request.get_json())
-        weather = weather.append(s, ignore_index=True)
-
-        return {'DATE': args.DATE}, 201
+        return add_date()
 
 
 class Temp(Resource):
+
     def get(self, date):
         """
         Return temperature data for a single date

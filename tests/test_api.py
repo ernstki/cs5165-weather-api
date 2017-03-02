@@ -78,8 +78,22 @@ class WeatherApiTestCase(unittest.TestCase):
                         'TMIN is not int type')
 
 
-    def test_post_date_json(self):
+    def test_new_date_get_query_string(self):
         pastd = self._shift_date(self.data[0][0], delta=-1)
+        d = zip(self.headers, (pastd, self.data[0][1], self.data[0][2]))
+
+        rv = self.app.get('/historical/', query_string=dict(d))
+        j = json.loads(rv.data)
+
+        self.assertEqual(rv.status_code, 201,
+                         "invalid status code (%i) GETing new date '%s'"
+                         % (rv.status_code, pastd))
+        self.assertEqual(j['DATE'], pastd,
+                         "unexpected response GETing new date '%s'" % pastd)
+
+
+    def test_new_date_post_json(self):
+        pastd = self._shift_date(self.data[0][0], delta=-2)
         d = zip(self.headers, (pastd, self.data[0][1], self.data[0][2]))
         jd = json.dumps(dict(d))
 
@@ -88,13 +102,14 @@ class WeatherApiTestCase(unittest.TestCase):
         j = json.loads(rv.data)
 
         self.assertEqual(rv.status_code, 201,
-                         "invalid status code posting new date '%s'" % pastd)
+                         "invalid status code (%i) posting new date '%s'"
+                         % (rv.status_code, pastd))
         self.assertEqual(j['DATE'], pastd,
                          "unexpected response posting new date '%s'" % pastd)
 
 
-    def test_post_date_x_www_form_urlencoded(self):
-        pastd = self._shift_date(self.data[0][0], delta=-2)
+    def test_new_date_post_x_www_form_urlencoded(self):
+        pastd = self._shift_date(self.data[0][0], delta=-3)
         d = zip(self.headers, (pastd, self.data[0][1], self.data[0][2]))
 
         # Werkzeug.Environbuilder's default content type is
@@ -106,6 +121,25 @@ class WeatherApiTestCase(unittest.TestCase):
                          "invalid status code posting new date '%s'" % pastd)
         self.assertEqual(j['DATE'], pastd,
                          "unexpected response posting new date '%s'" % pastd)
+
+
+    def test_new_date_missing_values(self):
+        pastd = self._shift_date(self.data[0][0], delta=-4)
+        d = zip(self.headers, (pastd, self.data[0][1], self.data[0][2]))
+
+        # leave each of DATE, TMAX, TMIN off, in sequence and try to POST
+        for k, v in zip(self.headers, range(0,3)):
+            badd = filter(lambda x: x[0] != k, d)
+            print(badd)
+            rv = self.app.post('/historical/', data=dict(badd))
+            j = json.loads(rv.data)
+
+            self.assertEqual(rv.status_code, 400,
+                            "expected error 400 when missing '%s'" % k)
+            self.assertTrue('message' in j.keys(),
+                            'expected error message in response')
+            self.assertTrue(k in j['message'].keys(),
+                            "expected '%s' in error message" % k)
                         
 
     def test_post_one_duplicate_date(self):
@@ -125,6 +159,16 @@ class WeatherApiTestCase(unittest.TestCase):
                          "expected error 400 posting dup date '%s'" % d['DATE'])
         self.assertTrue(j['message'].endswith('already exists'),
                         "unexpected error posting dup date '%s'" % d['DATE'])
+
+
+    def test_get_non_existent_date(self):
+        d = '99990101'
+        rv = self.app.get('/historical/%s' % d)
+        j = json.loads(rv.data)
+        self.assertEqual(rv.status_code, 404,
+                         "expected error 404 requesting future date '%s'" % d)
+        self.assertTrue(j['message'].startswith('No data found'),
+                        "expected 'No data found' error message")
     
 
 if __name__ == '__main__':
