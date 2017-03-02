@@ -68,9 +68,9 @@ system.
 3. Launch the Flask web application:
 
     ```
-    # on Windows, do 'set FLASK_APP=demoapi\demoapi.py' (note the backslash)
+    # on Windows, do 'set FLASK_APP=weatherapi\api.py' (note the backslash)
     export FLASK_DEBUG=1
-    export FLASK_APP=demoapi/demoapi.py
+    export FLASK_APP=weatherapi/api.py
     flask run  # defaults to http://127.0.0.1:5000
     ```
 
