@@ -169,6 +169,26 @@ class WeatherApiTestCase(unittest.TestCase):
                          "expected error 404 requesting future date '%s'" % d)
         self.assertTrue(j['message'].startswith('No data found'),
                         "expected 'No data found' error message")
+
+    # the 'zz' is so that it runs at the end, otherwise assertions about the
+    # size of the data read in from the .csv file will fail
+    def test_zz_delete_date(self):
+        d = self.data[0][0]
+        rv = self.app.delete('/historical/%s' % d)
+        self.assertEqual(rv.status_code, 204,
+                         "invalid status requesting date '%s'" % d)
+        self.assertTrue(not rv.data,
+                        "request body should be empty for DELETE operation")
+
+
+    def test_zz_delete_non_existent_date(self):
+        d = '99990101'
+        rv = self.app.delete('/historical/%s' % d)
+        j = json.loads(rv.data)
+        self.assertEqual(rv.status_code, 404,
+                         "expected error 404 requesting future date '%s'" % d)
+        self.assertTrue(j['message'].startswith('No data found'),
+                        "expected 'No data found' error message")
     
 
 if __name__ == '__main__':
