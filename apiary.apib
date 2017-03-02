@@ -3,86 +3,164 @@ HOST: http://polls.apiblueprint.org/
 
 # CS5162 Weather API
 
-Polls is a simple API allowing consumers to view polls and vote in them.
+REST API for historical temperatures (highs and lows) in Cincinnati.
+<br>For Prof. Tatavarty's 17FS_CS5165 Cloud Computing course.
 
 <table>
-<tr><th align="left">
-        Version</th><th align="left">
-                       Description</th></tr>
-<tr><td valign="top">
-        0.1</td>   <td>Creation of Apiary Project</td></tr>
+    <tr>
+        <th align="left">Version</th><th align="left">Description</th>
+    </tr>
+    <tr>
+        <td valign="top">0.1</td><td>Creation of Apiary Project</td>
+    </tr>
 </table>
 
-## Questions Collection [/questions]
 
-### List All Questions [GET]
+## Historical Temperatures Collection [/historical/]
+
+The `/historical` resource allows you to retrieve temperature data for all dates
+in the database, or POST temperature data for a new date.
+
+The Weather API will accept both the GET and POST methods for adding new data
+to the database. For POST, both `application/json` and `application/x-www-form-urlencoded`
+content types are accepted. (For the GET method, see below.)
+
+Attempting to POST to a date that already exists in the database will yield
+a `Data for <date> already exists` message in the JSON response.
+
+
+### Get all historical temperatures [GET]
 
 + Response 200 (application/json)
 
         [
-            {
-                "question": "Favourite programming language?",
-                "published_at": "2015-08-05T08:40:51.620Z",
-                "choices": [
-                    {
-                        "choice": "Swift",
-                        "votes": 2048
-                    }, {
-                        "choice": "Python",
-                        "votes": 1024
-                    }, {
-                        "choice": "Objective-C",
-                        "votes": 512
-                    }, {
-                        "choice": "Ruby",
-                        "votes": 256
-                    }
-                ]
-            }
+          {
+            "DATE": "20130101"
+          },
+          {
+            "DATE": "20130102"
+          },
+          {
+            "DATE": "20130103"
+          },
+          {
+            "DATE": "20170208"
+          },
+          {
+            "DATE": "20170209"
+          }
         ]
 
-### Create a New Question [POST]
+### Add temperature data for a date - POST [POST]
 
-You may create your own question using this action. It takes a JSON
-object containing a question and a collection of answers in the
-form of choices.
 
 + Request (application/json)
 
-        {
-            "question": "Favourite programming language?",
-            "choices": [
-                "Swift",
-                "Python",
-                "Objective-C",
-                "Ruby"
-            ]
-        }
+        {"DATE":"20170215","TMAX":62.0,"TMIN":45.0}
+
 
 + Response 201 (application/json)
-
-    + Headers
-
-            Location: /questions/2
 
     + Body
 
             {
-                "question": "Favourite programming language?",
-                "published_at": "2015-08-05T08:40:51.620Z",
-                "choices": [
-                    {
-                        "choice": "Swift",
-                        "votes": 0
-                    }, {
-                        "choice": "Python",
-                        "votes": 0
-                    }, {
-                        "choice": "Objective-C",
-                        "votes": 0
-                    }, {
-                        "choice": "Ruby",
-                        "votes": 0
-                    }
-                ]
+                "DATE": "20170215"
             }
+            
+### Add temperature data for date already in the database - POST [POST]
+
+
++ Request (application/json)
+
+        {"DATE":"20170215","TMAX":62.0,"TMIN":45.0}
+
+
++ Response 400 (application/json)
+
+    + Body
+
+            {
+                "message": "Data for 20170215 already exists"
+            }
+            
+## Add New Data with GET Request [/historical/{?DATE,TMAX,TMIN}]
+
+For adding new data to the database, the POST method probably makes more sense
+semantically-speaking, but transmitting the date, max, and min temperatures as
+query string parameters (_i.e._ after a `?` in the URL) also works.
+
+As with the `POST` method above, attempting add a date that already exists
+with a `GET` request will yield a `Data for <date> already exists` message in
+the JSON response.
+
++ Parameters
+
+    + DATE (string) - date for which to add data (`YYYYMMDD` format)
+    + TMAX (int) - maximum temperature (&deg;F)
+    + TMIN (int) - minumum temperature (&deg;F)
+    
+### Add temperature data for a date - GET [GET]
+
++ Response 201 (application/json)
+
+    + Body
+
+            {
+                "DATE": "20170215"
+            }
+
+### Add temperature data for date already in the database - GET [POST]
+
++ Response 400 (application/json)
+
+    + Body
+
+            {
+                "message": "Data for 20170215 already exists"
+            }
+
+
+## Temperature Data - Single Day [/historical/{date}]
+
+The temperature data for a single date in the past is retrieved by adding `{date}` in
+ISO8601 format (`YYYYMMDD`) to the end of the `/historical/` resource.
+
+Attempting to retrieve dates which don't exist in the datbase will yield a
+`Data for <date> already exists` message in the JSON response.
+
++ Parameters
+
+    + date (string) - date for which to fetch data (`YYYYMMDD` format)
+
+### Get temperatures for a single day in the past [GET]
+
+
++ Response 200 (application/json)
+
+    + Body
+
+            {
+                "DATE": "20170215",
+                "TMAX": 62.0,
+                "TMIN": 45.0
+            }
+            
+### Get temperatures for a single day not in the database [GET]
+
++ Response 404 (application/json)
+
+        {
+            "message": "No data found for 99990101"
+        }
+            
+### Delete temperature for a single day [DELETE]
+
++ Response 204
+
+### Delete temperature for a day not in the database [DELETE]
+
++ Response 404 (application/json)
+
+        {
+            "message": "No data found for 99990101"
+        }
