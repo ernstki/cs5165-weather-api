@@ -3,12 +3,15 @@ HOST: http://cs5165ernstki.ddns.net/
 
 # CS5165 Weather API
 
-REST API for historical temperatures (highs and lows) in Cincinnati, O. For Prof. Tatavarty's
-17FS_CS5165 Cloud Computing course.
+REST API for historical temperatures (highs and lows) in Cincinnati, O. For
+Prof. Tatavarty's 17FS_CS5165 Cloud Computing course.
 
-API documentation in Apiary Blueprint format is available at
-<http://docs.cs5165weatherapi.apiary.io>. The console on the Apiary "docs" site also allows
-queries against API of the [live server on EC2](http://cs5165ernstki.ddns.net/).
+API documentation in [Apiary Blueprint][apibp] format is available at
+<http://docs.cs5165weatherapi.apiary.io>. The console on the Apiary "docs" site
+also allows queries against API of the [live server on EC2][ec2].
+
+[apibp]: https://apiblueprint.org/documentation/specification.html
+[ec2]: http://cs5165ernstki.ddns.net
 
 <table>
     <tr>
@@ -25,12 +28,13 @@ queries against API of the [live server on EC2](http://cs5165ernstki.ddns.net/).
 
 ## Historical Temperatures Collection [/historical/]
 
-The `/historical` resource allows you to retrieve temperature data for all dates
-in the database, or POST temperature data for a new date.
+The `/historical` resource allows you to retrieve temperature data for all
+dates in the database, or POST temperature data for a new date.
 
 The Weather API will accept both the GET and POST methods for adding new data
-to the database. For POST, both `application/json` and `application/x-www-form-urlencoded`
-content types are accepted. (For the GET method, see below.)
+to the database. For POST, both `application/json` and
+`application/x-www-form-urlencoded` content types are accepted. (For the GET
+method, see below.)
 
 Attempting to POST to a date that already exists in the database will yield
 a `Data for <date> already exists` message in the JSON response.
@@ -63,8 +67,8 @@ a `Data for <date> already exists` message in the JSON response.
 
 + Request (application/json)
 
-    **Note**: Content type `application/x-www-form-urlencoded` is also accepted for
-    POST requests.
+    **Note**: Content type `application/x-www-form-urlencoded` is also accepted
+    for POST requests.
 
     + Body
 
@@ -98,11 +102,12 @@ a `Data for <date> already exists` message in the JSON response.
 
 ## Temperature Data - Add/Retrieve a Single Day [/historical/{date}]
 
-The temperature data for a single date in the past is retrieved by adding `{date}` in
-ISO8601 format (`YYYYMMDD`) to the end of the `/historical/` resource.
+The temperature data for a single date in the past is retrieved by adding
+`{date}` in ISO8601 format (`YYYYMMDD`) to the end of the `/historical/`
+resource.
 
-Attempting to retrieve dates which don't exist in the datbase will yield a
-`Data for <date> already exists` message in the JSON response.
+Attempting to retrieve dates which don't exist in the datbase will yield
+a `Data for <date> already exists` message in the JSON response.
 
 + Parameters
 
@@ -122,8 +127,8 @@ Attempting to retrieve dates which don't exist in the datbase will yield a
             
 + Response 404 (application/json)
 
-    When attempting to get temperatures for a day **not in the database**,
-    you get an error message in the JSON response.
+    When attempting to get temperatures for a day **not in the database**, you
+    get an error message in the JSON response.
     
     + Body 
 
