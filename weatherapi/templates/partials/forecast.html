@@ -1,0 +1,66 @@
+<!--
+
+This homework assignment will have you implement an UI for HW2 with a
+dynamic approach that uses asynchronous JavaScript requests to send the
+user-inputted data to the ReST API you built, receive the structured results,
+and then publish them into the page without refreshing the whole page again.
+
+The Webpage should take an input date and then plot the Forecasts TMIN, TMAX
+for atl Next Five Days.
+
+BONUS 25 Points: Also, Plot weather forecast for at least 5 DAYS from a Third
+Party Weather Forecasting Service such as Yahoo Weather, NCDC, Weather
+Underground, Weather, Open Weather Map,
+
+-->
+
+<div class="row">
+  <div class="col-md-1"></div>
+
+  <div class="col-md-5">
+    Input form
+  </div>
+
+  <div class="col-md-1"></div>
+
+  <div class="col-md-4">
+    <canvas id="five-day-forecast" width="400" height="400"></canvas>
+  </div>
+
+  <div class="col-md-1"></div>
+
+</div><!-- /.row -->
+
+{{ asset.vendorjs('chart.js/dist/Chart.min.js') }}
+<script>
+  var ctx = document.getElementById("five-day-forecast");
+
+  var scatterChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+          datasets: [{
+              label: 'Scatter Dataset',
+              data: [{
+                  x: -10,
+                  y: 0
+              }, {
+                  x: 0,
+                  y: 10
+              }, {
+                  x: 10,
+                  y: 5
+              }]
+          }]
+      },
+      options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+              xAxes: [{
+                  type: 'linear',
+                  position: 'bottom'
+              }]
+          }
+      }
+  });
+</script>

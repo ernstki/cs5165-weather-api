@@ -4,11 +4,16 @@ import sys
 import click
 import pandas as pd
 import numpy as np
-from flask import Flask, Markup, request, render_template, jsonify
+from flask import Flask, Markup, Response, request, render_template, \
+                  jsonify
 from flask_restful import abort, reqparse, Resource, Api
+
+from helpers import register_jinja_helpers
 
 app = Flask(__name__)
 api = Api(app)  # Flask-Restful API object
+
+register_jinja_helpers(app)
 
 app.config.update(
     TEMPLATES_AUTO_RELOAD=True,
@@ -136,7 +141,8 @@ def index():
 
     mdfile = os.path.join(app.root_path, '..', 'REST.md')
     with app.open_resource(mdfile, 'r') as f:
-        sourcetext = unicode(f.read(), 'utf-8')
+        #sourcetext = unicode(f.read(), 'utf-8')
+        sourcetext = f.read()
 
     # Borrowed from https://github.com/skurfer/RenderMarkdown
     md_ext = ['extra', 'codehilite']
@@ -150,6 +156,15 @@ def index():
     markdown = Markup(md.convert(sourcetext))
 
     return render_template('index.html', markdown=markdown)
+
+
+@app.route('/license')
+def license():
+    """
+    Return the LICENSE.txt to the browser
+    """
+    with app.open_resource(os.path.join('..', 'LICENSE.txt')) as f:
+        return Response(f.read(), mimetype='text/plain')
 
 
 @app.route('/help')
@@ -205,22 +220,24 @@ def clean():
               help='Dump in comma-separated value format.')
 def dumpdb(with_ids, as_csv):
     """Dump contents of database to the terminal."""
-    sep = '\t'
+    pass
 
-    if as_csv:
-        with_ids = True
-        sep = ','
-        cols = [col.name for col in Organism.__table__.columns]
+    #sep = '\t'
 
-        click.echo(','.join(cols))
+    #if as_csv:
+    #    with_ids = True
+    #    sep = ','
+    #    cols = [col.name for col in Organism.__table__.columns]
 
-    for rec in Organism.query.all():
-        cols = [rec.name]
+    #    click.echo(','.join(cols))
 
-        if with_ids:
-            cols.insert(0, str(rec.id))
+    #for rec in Organism.query.all():
+    #    cols = [rec.name]
 
-        click.echo(sep.join(cols))
+    #    if with_ids:
+    #        cols.insert(0, str(rec.id))
+
+    #    click.echo(sep.join(cols))
 
 
 if __name__ == '__main__':

@@ -9,8 +9,8 @@
     <meta name="author" content="">
     <title>CS5165 Weather API</title>
     {{ asset.favicons() }}
-    {{ asset.vendorcss('bootstrap/dist/css/bootstrap.min.css') }}    
-    {{ asset.css('style.css') }}    
+    {{ asset.vendorcss('bootstrap/dist/css/bootstrap.min.css') }}
+    {{ asset.css('style.css') }}
 
     <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
     <!--link href="../../assets/css/ie10-viewport-bug-workaround.css" rel="stylesheet"-->
@@ -50,9 +50,12 @@
             <li>
               <a href="http://docs.cs5165weatherapi.apiary.io"
                  title="API specification and debugging console">
-                Docs
+                API Spec
               </a>
             </li>
+          </ul>
+
+          <ul class="nav navbar-nav navbar-right">
             <li>
               <a href="https://github.com/ernstki/cs5165-weather-api"
                  title="See also: https://github.uc.edu/ernstki/cs5165-weather-api">
@@ -66,11 +69,18 @@
 
     <div class="container">
 
-      <div class="api-spec">
-        {{ markdown }}
-      </div>
+    {% include 'partials/forecast.html' %}
 
     </div><!-- /.container -->
+
+    <footer class="footer">
+      <div class="container">
+        <div class="col-md-12 navbar-text text-muted text-center">
+          &copy; {{ currentyear() }} Kevin Ernst,
+          <a href="{{ url_for('license') }}">MIT license</a>
+        </div>
+      </div>
+    </footer>
 
     {{ asset.vendorjs("jquery/dist/jquery.min.js") }}
     {{ asset.vendorjs('bootstrap/dist/js/bootstrap.min.js') }}
