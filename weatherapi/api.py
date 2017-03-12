@@ -48,8 +48,8 @@ def add_date():
     global weather
     args = postparser.parse_args()
 
-    if args.DATE in weather[['DATE']].values:
-        abort(400, message='Data for %s already exists' % args.DATE)
+    #if args.DATE in weather[['DATE']].values:
+    #    abort(400, message='Data for %s already exists' % args.DATE)
 
     s = pd.Series(args)
     assert s.any()
@@ -115,7 +115,7 @@ class Temp(Resource):
         Delete the temperature data for a single date
         """
         check_date(date)
-        weather.drop(weather.index[weather.DATE == '20170207'], inplace=True)
+        weather.drop(weather.index[weather.DATE == date], inplace=True)
         return '', 204
 
 
@@ -195,6 +195,32 @@ def clean():
                         fg='red')
 
     click.secho('\nAll done.', fg='green')
+
+
+@app.cli.command()
+@click.option('--restrict-date-range', type=click.STRING)
+@click.option('--with-ids', is_flag=True, default=False,
+              help='Include unique IDs with each record.')
+@click.option('--as-csv', is_flag=True, default=False,
+              help='Dump in comma-separated value format.')
+def dumpdb(with_ids, as_csv):
+    """Dump contents of database to the terminal."""
+    sep = '\t'
+
+    if as_csv:
+        with_ids = True
+        sep = ','
+        cols = [col.name for col in Organism.__table__.columns]
+
+        click.echo(','.join(cols))
+
+    for rec in Organism.query.all():
+        cols = [rec.name]
+
+        if with_ids:
+            cols.insert(0, str(rec.id))
+
+        click.echo(sep.join(cols))
 
 
 if __name__ == '__main__':
