@@ -159,6 +159,12 @@ class Temp(Resource):
         return '', 204
 
 
+class FutureForecast(Resource):
+
+    def get(self):
+        abort(501, message="Not yet implemented :(")
+
+
 class Forecast(Resource):
     """
     Weather forecasts
@@ -168,6 +174,7 @@ class Forecast(Resource):
         """
         Return weather forecast for next seven days
         """
+
         args = limit_parser.parse_args()
         limit = args.limit if args.limit else 7
 
@@ -178,6 +185,7 @@ class Forecast(Resource):
 
 api.add_resource(Temps, '/historical/')
 api.add_resource(Temp, '/historical/<string:date>')
+api.add_resource(FutureForecast, '/forecast/')
 api.add_resource(Forecast, '/forecast/<string:date>')
 
 # ========================================================================

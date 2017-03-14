@@ -14,43 +14,81 @@ Underground, Weather, Open Weather Map,
     <div id="weatherSearch" class="container">
 
       <div class="row">
-        <div class="col-md-1"></div>
 
         <!-- input form -->
-        <div id="weatherSearchForm" class="col-md-5">
-          <h2>Search the weather database</h2>
+        <div id="weatherSearchForm" class="col-md-4">
+          <h2>Forecast by date</h2>
 
-          <div class="form-group">
-            <!--label for="date">Input or search for date (YYYYMMDD):</label-->
-            <input type="text" class="form-control"
-                   placeholder="date in YYYYMMDD format"
-                   v-model="inputDate" @keyup.enter.prevent="onEnter">
-            <!--p class="help-block">Help text here.</p-->
+          <div class="form-group"
+               v-bind:class="getDateFailed ? 'has-error' : ''">
+            <div class="input-group">
+              <input type="text" class="form-control input-lg"
+                     placeholder="Ex. 20130101"
+                     v-model="inputDate" v-on:keyup.enter.stop="onEnter"
+                     v-on:keydown="enableResetButton">
 
+              <span class="input-group-btn">
+                <template v-if="spinButtonsEnabled">
+                  <button v-bind:disabled="!resetEnabled"
+                          class="btn btn-lg btn-default"
+                          v-on:click="resetForm">
+                    <i class="glyphicon glyphicon glyphicon-step-backward"></i>
+                  </button>
+                  <button v-bind:disabled="!resetEnabled"
+                          class="btn btn-lg btn-default"
+                          v-on:click="resetForm">
+                    <i class="glyphicon glyphicon glyphicon-step-forward"></i>
+                  </button>
+                </template>
+
+                <button v-bind:disabled="!resetEnabled"
+                        class="btn btn-lg btn-default"
+                        v-on:click="resetForm">
+                  <i class="glyphicon glyphicon-remove-circle"></i>
+                </button>
+              </span>
+            </div>
+            <template v-if="getDateFailed">
+              <p class="help-block">
+                Error retrieving date <span v-text="inputDate"></span>
+              </p>
+            </template>
             <!--v-select label="date" placeholder="Search dates..." :debounce="250"
                       :options="dates" :on-search="getDates"-->
-          </div>
+          </div> <!--/.form-group-->
+          <!-- /input form -->
 
           <div class="well">
-            <ul>
-              <template v-if="allDates">
-                <li v-for="date in allDates"
-                    v-bind:text-content.prop="date.DATE">
-                </li>
-              </template>
-            </ul>
-          </div>
-        </div>
+            <table class="table table-hover">
+              <thead>
+                <tr><th>Date</th><th>Max. Temp</th><th>Min. Temp</th></tr>
+              </thead>
+              <tbody>
+                <tr v-for="date in forecastDates">
+                  <td class="date-date" v-text="date.DATE"></td>
+                  <td class="date-tmin" v-text="date.TMIN"></td>
+                  <td class="date-tmax" v-text="date.TMAX"></td>
+                </tr>
+              </tbody>
+            </table>
+
+            <button class="btn btn-primary pull-right"
+                    v-on:click="loadSampleData">
+              Load Sample Data
+            </button>
+            <div class="clearfix"></div>
+          </div> <!--/.well-->
+
+        </div> <!--/#weatherSearchForm-->
 
         <div class="col-md-1"></div>
-        <!-- /input form -->
 
-        <!-- chart -->
-        <div id="weatherSearchGraph" class="col-md-4">
-          <canvas id="five-day-forecast" width="400" height="400"></canvas>
+        <div id="weatherSearchGraph" class="col-md-7 text-center">
+          <h2>Five-day Highs &amp; Lows</h2>
+          <canvas id="five-day-forecast" width="400" height="300"
+                  no-v-bind:style="chartDimmed ? 'opacity:0.5' : 'opacity:1.0'">
+          </canvas>
         </div>
-
-        <div class="col-md-1"></div>
 
       </div><!-- /.row -->
 
@@ -59,82 +97,97 @@ Underground, Weather, Open Weather Map,
 
 {{ asset.vendorjs('vue/dist/vue.js')}}
 {{ asset.vendorjs('vue-resource/dist/vue-resource.min.js')}}
+{{ asset.vendorjs('lodash/dist/lodash.min.js')}}
+{{ asset.vendorjs('chart.js/dist/Chart.min.js') }}
 {# asset.unpkg('vue-select') #}
+
 <script>
-  var date = null;
-  var dates = [];
+
+  var ctx = document.getElementById("five-day-forecast");
+
+  var chart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: [0, 1, 2, 3, 4],
+      datasets: [
+        {
+          label: 'Low Temperatures',
+          data: [15, 25, 35, 45, 55],
+          backgroundColor: '#36a2eb',
+        },
+        {
+          label: 'High Temperatures',
+          data: [20, 30, 40, 50, 60],
+          backgroundColor: '#ff6384'
+        },
+      ]
+    },
+    options: {
+      maintainAspectRatio: true,
+      responsive: true,
+      scales: {
+        yAxes: [{ stacked: true}]
+      }
+    }
+  }); // new Chart
+
 
   var f = new Vue({
     el: '#weatherSearchForm',
     data: {
       inputDate: null,
-      allDates: dates
+      resetEnabled: false,
+      forecastDates: [],
+      getDateFailed: false,
+      spinButtonsEnabled: false,
     },
     methods: {
       onEnter: function(e) {
-        console.log(this.inputDate);
-        this.$http.get('/historical', {
+        this.$http.get('/forecast/' + this.inputDate, {
           params: {
-            DATE: this.inputDate
+            limit: 5
           }
         }).then(function(res) {
-          console.log(res.data);
-          this.allDates = res.data;
+          this.forecastDates = res.data;
+          // Update the Chart.js chart
+          chart.data.labels           = _.map(this.forecastDates, 'DATE');
+          chart.data.datasets[0].data = _.map(this.forecastDates, 'TMIN');
+          chart.data.datasets[1].data = _.map(this.forecastDates, 'TMAX');
+          chart.update();
+          // Clear errors and enable the reset button
+          this.resetEnabled = true;
+          this.getDateFailed = false;
+        }, function(res) {
+          this.getDateFailed = true;
+          console.log("Error fetching '" + this.inputDate + "': " +
+                      res.statusText);
         });
+      }, // onenter
+      enableResetButton: function(e) {
+        this.resetEnabled = true;
       },
-      //getDates: function(search, loading) {
-      //  loading(true);
-      //  this.$http.get('/historical', {
-      //    DATE: search
-      //  }).then(function(res) {
-      //    console.log(res.data);
-      //    this.allDates = res.data;
-      //    loading(false);
-      //  });
-      //} // getDates
-    }
-  });
-
-  var g = new Vue({
-    el: '#weatherSearchGraph',
-    data: {
-      selectedDate: date,
-      title: null
-    }
-  })
-</script>
-
-
-{{ asset.vendorjs('chart.js/dist/Chart.min.js') }}
-<script>
-  var ctx = document.getElementById("five-day-forecast");
-
-  var scatterChart = new Chart(ctx, {
-      type: 'line',
-      data: {
-          datasets: [{
-              label: 'Scatter Dataset',
-              data: [{
-                  x: -10,
-                  y: 0
-              }, {
-                  x: 0,
-                  y: 10
-              }, {
-                  x: 10,
-                  y: 5
-              }]
-          }]
+      resetForm: function(e) {
+        this.inputDate = '';
+        this.resetEnabled = false;
+        this.getDateFailed = false;
+        this.forecastDates = [];
+        chart.data.datasets[0].data = [];
+        chart.data.datasets[1].data = [];
+        chart.update();
       },
-      options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          scales: {
-              xAxes: [{
-                  type: 'linear',
-                  position: 'bottom'
-              }]
-          }
+      loadSampleData: function(e) {
+        this.inputDate = '20130101';
+        this.onEnter();
       }
+    }, // methods
   });
+
+  // var g = new Vue({
+  //   el: '#weatherSearchGraph',
+  //   data: {
+  //     title: null,
+  //     chartDimmed: false,
+  //   }
+  // })
+
 </script>
