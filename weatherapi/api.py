@@ -1,12 +1,14 @@
 #!/usr/bin/env python
 import os
 import sys
+import re
 import click
 import pandas as pd
 import numpy as np
 from flask import Flask, Markup, Response, request, render_template, \
                   jsonify
 from flask_restful import abort, reqparse, Resource, Api
+from werkzeug.exceptions import BadRequestKeyError
 
 from helpers import register_jinja_helpers
 
@@ -27,20 +29,34 @@ weather = pd.read_csv(app.config['CSV_FILE'],
                       header=0,
                       dtype={'DATE': np.str})
 
-# A request parser for the POST operation
-postparser = reqparse.RequestParser(trim=True)
-postparser.add_argument('DATE', type=str, required=True,
+
+# A request parser for GETs and POSTs (the entire date object, all keys req'd)
+date_parser = reqparse.RequestParser(trim=True)
+date_parser.add_argument('DATE', type=str, required=True,
                          help='Invalid date (expected: YYYYMMDD as string)')
-postparser.add_argument('TMIN', type=float, required=True,
+date_parser.add_argument('TMIN', type=float, required=True,
                          help='Invalid temperature (expected: floating point)')
-postparser.add_argument('TMAX', type=float, required=True,
-                        help='Invalid temperature (expected: floating point)')
+date_parser.add_argument('TMAX', type=float, required=True,
+                         help='Invalid temperature (expected: floating point)')
+
+# Same parser, but with all arguments optional (used to check which ones exist)
+date_parser_optional = date_parser.copy()
+for arg in ['DATE', 'TMIN', 'TMAX']:
+    date_parser_optional.replace_argument(arg, required=False)
+
+# A request parser for the ?limit=n query string param for /forecast
+limit_parser = reqparse.RequestParser(trim=True)
+limit_parser.add_argument('limit', type=int, required=False)
 
 
 def check_date(date):
     """
     Check to see if the given date exists in the DataFrame. Abort if not.
     """
+    if not date:
+        abort(500, message="Error checking date (null input value)")
+    if not re.match('\d{8}$', date):
+        abort(400, message="Invalid date '%s'; did not match pattern" % date)
     if not date in weather[['DATE']].values:
         abort(404, message="No data found for %s" % date)
 
@@ -51,15 +67,17 @@ def add_date():
     application/x-www-form-urlencoded) request.
     """
     global weather
-    args = postparser.parse_args()
+    args = date_parser.parse_args()  # will abort if any are missing
 
+    # Want to abort if the DATE already exists in the database? Here's how:
     #if args.DATE in weather[['DATE']].values:
     #    abort(400, message='Data for %s already exists' % args.DATE)
 
     s = pd.Series(args)
-    assert s.any()
-    weather = weather.append(s, ignore_index=True)
+    if not s.any():
+        abort(500, message="Internal server error adding new date")
 
+    weather = weather.append(s, ignore_index=True).sort()
     return {'DATE': args.DATE}, 201
 
 
@@ -87,13 +105,30 @@ class Temps(Resource):
     def get(self):
         """
         Return all dates for which weather data exists, unless query string
-        parameters exist, in which case add the given date + temps.
+        parameters exist.
+
+          - if *no* query arguments, then return all data
+          - if *only* DATE exists in the query args, return data for that date
+          - otherwise add the given date + temps
         """
-        if request.args:
-            return add_date()
-        else:
-            global weather
+        global weather
+        args = date_parser_optional.parse_args()
+        app.logger.info("GET request parsed args: %s" % args)
+
+        # what we normally expect; no query string args, return all dates
+        if not any(args.values()):
             return df_to_reponse(weather[['DATE']])
+
+        # if DATE and only DATE in query string:
+        if not args.TMIN and not args.TMAX:
+            check_date(args.DATE)  # maybe overkill?
+            return df_to_reponse(
+                weather[weather.DATE == args.DATE]
+            )
+        else:
+            # This will report any missing keys with a 400 reponse
+            return add_date()
+
 
     def post(self):
         """
@@ -124,8 +159,26 @@ class Temp(Resource):
         return '', 204
 
 
+class Forecast(Resource):
+    """
+    Weather forecasts
+    """
+
+    def get(self, date):
+        """
+        Return weather forecast for next seven days
+        """
+        args = limit_parser.parse_args()
+        limit = args.limit if args.limit else 7
+
+        check_date(date)
+        starti = weather.index[weather.DATE == date][0]
+        return df_to_reponse(weather[starti:starti + limit])
+
+
 api.add_resource(Temps, '/historical/')
 api.add_resource(Temp, '/historical/<string:date>')
+api.add_resource(Forecast, '/forecast/<string:date>')
 
 # ========================================================================
 #                              r o u t e s
@@ -155,7 +208,7 @@ def index():
     #markdown = Markup(linkify(md.convert(sourcetext), skip_pre=True))
     markdown = Markup(md.convert(sourcetext))
 
-    return render_template('index.html', markdown=markdown)
+    return render_template('index.html.j2', markdown=markdown)
 
 
 @app.route('/license')

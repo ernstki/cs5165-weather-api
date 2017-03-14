@@ -65,6 +65,9 @@ class WeatherApiTestCase(unittest.TestCase):
 
 
     def test_get_one_date(self):
+        """
+        Test a normal GET request where the DATE is part of the URL
+        """
         d = self.data[0][0]
         rv = self.app.get('/historical/%s' % d)
         j = json.loads(rv.data)
@@ -78,7 +81,28 @@ class WeatherApiTestCase(unittest.TestCase):
                         'TMIN is not int type')
 
 
+    def test_get_one_date_with_query_string(self):
+        """
+        Test a GET request where DATE is part of the URL query string
+        """
+        d = self.data[0][0]
+        rv = self.app.get('/historical/', query_string={ 'DATE': d })
+        j = json.loads(rv.data)
+        self.assertEqual(rv.status_code, 200,
+                         "invalid status requesting date '%s'" % d)
+        self.assertTrue(type(j['DATE']) is unicode or type(j['DATE']) is str,
+                        'DATE is not unicode or str type')
+        self.assertTrue(type(j['TMAX']) is int or type(j['TMAX']) is float,
+                        'TMAX is not int or float type')
+        self.assertTrue(type(j['TMIN']) is int or type(j['TMIN']) is float,
+                        'TMIN is not int type')
+
+
     def test_new_date_get_query_string(self):
+        """
+        Test adding a new date with query string parameters (unusual, but the
+        HW #2 spec seems to require it)
+        """
         pastd = self._shift_date(self.data[0][0], delta=-1)
         d = zip(self.headers, (pastd, self.data[0][1], self.data[0][2]))
 
@@ -93,6 +117,9 @@ class WeatherApiTestCase(unittest.TestCase):
 
 
     def test_new_date_post_json(self):
+        """
+        Test the usual method of adding a new date: posting a JSON object
+        """
         pastd = self._shift_date(self.data[0][0], delta=-2)
         d = zip(self.headers, (pastd, self.data[0][1], self.data[0][2]))
         jd = json.dumps(dict(d))
@@ -123,17 +150,36 @@ class WeatherApiTestCase(unittest.TestCase):
                          "unexpected response posting new date '%s'" % pastd)
 
 
-    def test_new_date_missing_values(self):
+    def test_new_date_post_with_missing_values(self):
+        """
+        Leave each of DATE, TMAX, TMIN off, in sequence and try to POST
+        """
         pastd = self._shift_date(self.data[0][0], delta=-4)
         d = zip(self.headers, (pastd, self.data[0][1], self.data[0][2]))
 
-        # leave each of DATE, TMAX, TMIN off, in sequence and try to POST
-        for k, v in zip(self.headers, range(0,3)):
-            badd = filter(lambda x: x[0] != k, d)
-            print(badd)
+        for k, v in zip(self.headers, (0, 1, 2)):
+            badd = filter(lambda x: x[0] != k, d)  # remove one key
             rv = self.app.post('/historical/', data=dict(badd))
             j = json.loads(rv.data)
+            self.assertEqual(rv.status_code, 400,
+                            "expected error 400 when missing '%s'" % k)
+            self.assertTrue('message' in j.keys(),
+                            'expected error message in response')
+            self.assertTrue(k in j['message'].keys(),
+                            "expected '%s' in error message" % k)
 
+
+    def test_new_date_get_with_missing_values(self):
+        """
+        Leave each of TMAX, TMIN off, in sequence and try to GET
+        """
+        pastd = self._shift_date(self.data[0][0], delta=-4)
+        d = zip(self.headers, (pastd, self.data[0][1], self.data[0][2]))
+
+        for k, v in zip(self.headers[1:3], (1, 2)):
+            badd = filter(lambda x: x[0] != k, d)  # remove one key
+            rv = self.app.get('/historical/', query_string=dict(badd))
+            j = json.loads(rv.data)
             self.assertEqual(rv.status_code, 400,
                             "expected error 400 when missing '%s'" % k)
             self.assertTrue('message' in j.keys(),

@@ -1,0 +1,140 @@
+<!--
+This homework assignment will have you implement an UI for HW2 with a
+dynamic approach that uses asynchronous JavaScript requests to send the
+user-inputted data to the ReST API you built, receive the structured results,
+and then publish them into the page without refreshing the whole page again.
+
+The Webpage should take an input date and then plot the Forecasts TMIN, TMAX
+for atl Next Five Days.
+
+BONUS 25 Points: Also, Plot weather forecast for at least 5 DAYS from a Third
+Party Weather Forecasting Service such as Yahoo Weather, NCDC, Weather
+Underground, Weather, Open Weather Map,
+-->
+    <div id="weatherSearch" class="container">
+
+      <div class="row">
+        <div class="col-md-1"></div>
+
+        <!-- input form -->
+        <div id="weatherSearchForm" class="col-md-5">
+          <h2>Search the weather database</h2>
+
+          <div class="form-group">
+            <!--label for="date">Input or search for date (YYYYMMDD):</label-->
+            <input type="text" class="form-control"
+                   placeholder="date in YYYYMMDD format"
+                   v-model="inputDate" @keyup.enter.prevent="onEnter">
+            <!--p class="help-block">Help text here.</p-->
+
+            <!--v-select label="date" placeholder="Search dates..." :debounce="250"
+                      :options="dates" :on-search="getDates"-->
+          </div>
+
+          <div class="well">
+            <ul>
+              <template v-if="allDates">
+                <li v-for="date in allDates"
+                    v-bind:text-content.prop="date.DATE">
+                </li>
+              </template>
+            </ul>
+          </div>
+        </div>
+
+        <div class="col-md-1"></div>
+        <!-- /input form -->
+
+        <!-- chart -->
+        <div id="weatherSearchGraph" class="col-md-4">
+          <canvas id="five-day-forecast" width="400" height="400"></canvas>
+        </div>
+
+        <div class="col-md-1"></div>
+
+      </div><!-- /.row -->
+
+    </div><!-- /#weatherSearch.container -->
+
+
+{{ asset.vendorjs('vue/dist/vue.js')}}
+{{ asset.vendorjs('vue-resource/dist/vue-resource.min.js')}}
+{# asset.unpkg('vue-select') #}
+<script>
+  var date = null;
+  var dates = [];
+
+  var f = new Vue({
+    el: '#weatherSearchForm',
+    data: {
+      inputDate: null,
+      allDates: dates
+    },
+    methods: {
+      onEnter: function(e) {
+        console.log(this.inputDate);
+        this.$http.get('/historical', {
+          params: {
+            DATE: this.inputDate
+          }
+        }).then(function(res) {
+          console.log(res.data);
+          this.allDates = res.data;
+        });
+      },
+      //getDates: function(search, loading) {
+      //  loading(true);
+      //  this.$http.get('/historical', {
+      //    DATE: search
+      //  }).then(function(res) {
+      //    console.log(res.data);
+      //    this.allDates = res.data;
+      //    loading(false);
+      //  });
+      //} // getDates
+    }
+  });
+
+  var g = new Vue({
+    el: '#weatherSearchGraph',
+    data: {
+      selectedDate: date,
+      title: null
+    }
+  })
+</script>
+
+
+{{ asset.vendorjs('chart.js/dist/Chart.min.js') }}
+<script>
+  var ctx = document.getElementById("five-day-forecast");
+
+  var scatterChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+          datasets: [{
+              label: 'Scatter Dataset',
+              data: [{
+                  x: -10,
+                  y: 0
+              }, {
+                  x: 0,
+                  y: 10
+              }, {
+                  x: 10,
+                  y: 5
+              }]
+          }]
+      },
+      options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+              xAxes: [{
+                  type: 'linear',
+                  position: 'bottom'
+              }]
+          }
+      }
+  });
+</script>

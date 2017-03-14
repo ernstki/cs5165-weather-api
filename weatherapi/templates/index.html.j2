@@ -67,11 +67,9 @@
       </div>
     </nav>
 
-    <div class="container">
-
-    {% include 'partials/forecast.html' %}
-
-    </div><!-- /.container -->
+    <!-- partials/forecast » -->
+    {% include 'partials/forecast.html.j2' %}
+    <!-- « partials/forecast -->
 
     <footer class="footer">
       <div class="container">
@@ -82,8 +80,8 @@
       </div>
     </footer>
 
-    {{ asset.vendorjs("jquery/dist/jquery.min.js") }}
-    {{ asset.vendorjs('bootstrap/dist/js/bootstrap.min.js') }}
+    {# asset.vendorjs("jquery/dist/jquery.min.js") #}
+    {# asset.vendorjs('bootstrap/dist/js/bootstrap.min.js') #}
     <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
     <!--script src="../../assets/js/ie10-viewport-bug-workaround.js"></script-->
   </body>
