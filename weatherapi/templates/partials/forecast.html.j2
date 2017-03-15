@@ -23,7 +23,7 @@ Underground, Weather, Open Weather Map,
                   <input class="form-control input-lg text-center" size="2"
                          type="text" v-model="skipDays"
                          v-bind:disabled="!resetEnabled"
-                         v-on:keyup.enter.prevent="getForecast()">
+                         v-on:keyup.enter.prevent="skipDaysUpdated">
                   days
                 </h2>
               </div>
@@ -34,7 +34,7 @@ Underground, Weather, Open Weather Map,
             <div class="input-group">
 {#-
               <template v-if="dateSkipperEnabled">
--#}
+#}
                 <span class="input-group-btn">
                   <button v-bind:disabled="!resetEnabled"
                           class="btn btn-lg btn-default"
@@ -44,25 +44,32 @@ Underground, Weather, Open Weather Map,
                   </button>
                   <button v-bind:disabled="!resetEnabled"
                           class="btn btn-lg btn-default"
-                          v-on:click="daySkipPrev"
+                          v-on:click="periodSkipPrev"
                           v-bind:title="skipInEnglish('back')">
                     <i class="glyphicon glyphicon glyphicon-step-backward"></i>
                   </button>
-                </span>
+                </span> <!-- skip backward -->
 {#-
               </template>
--#}
+#}
               <input type="text" class="form-control input-lg text-center"
-                     placeholder="Ex. 20130101"
-                     v-model="theDate" v-on:keyup.enter.stop="getForecast"
+                     placeholder="" v-model="inputDate" v-focus.lazy="inputDateFocused"
+                     @click="inputDateFocused = true" @blur="inputDateFocused = false"
+                     title="Another hint: space bar advances by one forecast period"
+                     v-on:keydown.space.prevent="" v-on:keyup.space.prevent="periodSkipNext"
+                     v-on:keydown.up.prevent="" v-on:keyup.up.prevent="dayAdvance"
+                     v-on:keydown.down.prevent="" v-on:keyup.down.prevent="dayRewind"
+                     v-on:keydown.pgup.prevent="" v-on:keyup.pgup.prevent="yearAdvance"
+                     v-on:keydown.pgdn.prevent="" v-on:keyup.pgdn.prevent="yearRewind"
+                     v-on:keyup.enter.prevent="inputDateUpdated"
                      v-on:keydown="enableResetButton">
 {#-
               <i class="glyphicon glyphicon-remove form-control-feedback"></i>
--#}
+#}
               <span class="input-group-btn">
                 <button v-bind:disabled="!resetEnabled"
                         class="btn btn-lg btn-default"
-                        v-on:click="daySkipNext"
+                        v-on:click="periodSkipNext"
                         v-bind:title="skipInEnglish('ahead')">
 
                   <i class="glyphicon glyphicon glyphicon-step-forward"></i>
@@ -73,23 +80,29 @@ Underground, Weather, Open Weather Map,
                         title="Jump to end of year">
                   <i class="glyphicon glyphicon glyphicon-fast-forward"></i>
                 </button>
-              </span>
+              </span> <!-- skip forward -->
 {#-
                 <button v-bind:disabled="!resetEnabled"
                         class="btn btn-lg btn-default"
                         v-on:click="resetForm">
                   <i class="glyphicon glyphicon-remove-circle"></i>
                 </button>
--#}
+#}
             </div>
+
             <template v-if="getDateFailed">
               <p class="help-block text-center">
-                Error retrieving date <span v-text="theDate"></span>.
+                There was an error retrieving that date.
                 Sorry about that!
               </p>
             </template>
-            <!--v-select label="date" placeholder="Search dates..." :debounce="250"
-                      :options="dates" :on-search="getDates"-->
+            <template v-else>
+              <p class="help-block text-center">
+                Enter a date in <tt>YYYYMMDD</tt> or <tt>YYYY-MM-DD</tt>
+                format.<br>
+                <em>Hint: try the up/down arrow keys and PgUp/PgDn.</em>
+              </p>
+            </template>
           </div> <!--/.form-group-->
           <!-- /input form -->
 
@@ -110,12 +123,24 @@ Underground, Weather, Open Weather Map,
                 </tr>
                 <template v-if="forecastDates.length">
                   <tr v-for="date in forecastDates">
-                    <td class="date-date" v-text="isoDate(date.DATE)"></td>
-                    <td class="date-tmin" v-text="date.TMIN"
-                        v-bind:class="{ 'bg-info': isFreezing(date.TMIN) }">
+                    <td class="date-date" style="vertical-align:bottom">
+                      <span v-text="isoDate(date.DATE)"></span>
                     </td>
-                    <td class="date-tmax" v-text="date.TMAX"
-                        v-bind:class="{ 'bg-danger': isSweltering(date.TMAX) }">
+                    <td class="date-tmin">
+                      <h4 style="margin:0;">
+                        <span v-text="date.TMIN" class="label label-round"
+                           v-bind:class="{ 'label-info': isFreezing(date.TMIN),
+                                           'label-default': !isFreezing(date.TMIN) }">
+                        </span>
+                      </h4>
+                    </td>
+                    <td class="date-tmax">
+                      <h4 style="margin:0;">
+                        <span v-text="date.TMAX" class="label label-round"
+                            v-bind:class="{ 'label-danger': isSweltering(date.TMAX),
+                                            'label-default': !isSweltering(date.TMAX) }">
+                        </span>
+                      </h4>
                     </td>
                   </tr>
                 </template>
@@ -124,17 +149,27 @@ Underground, Weather, Open Weather Map,
           </div> <!--/.well-->
 
           <div class="form-group">
-            <button class="btn btn-md btn-primary pull-right"
-                    v-on:click="loadSampleData">
-              Load Sample Data
-            </button>
+{#-
             <button class="btn btn-md btn-default"
+                    v-bind:disabled="!resetEnabled" v-on:click="resetForm">
+              Reset
+            </button>
+#}
+            <button class="btn btn-md btn-default"
+                    title="See historical temperature for today's date in the chosen year"
+                    v-on:click="goToTodaysDate">
+              Temperature for Today's Date
+            </button>
+
+            <button class="btn btn-md btn-primary pull-right"
+                    title="Reset form and chart settings to defaults"
                     v-bind:disabled="!resetEnabled" v-on:click="resetForm">
               Reset Form &amp; Chart
             </button>
           </div> <!--/.input-group-->
-
+{#-
           <div class="clearfix"></div>
+#}
 
         </div> <!--/#weatherSearchForm-->
 
@@ -151,15 +186,15 @@ Underground, Weather, Open Weather Map,
 
     </div><!-- /#weatherSearch.container -->
 
-
-{{ asset.vendorjs('vue/dist/vue.js') }}
+{{ asset.vendorjs('vue/dist/vue.min.js') }}
 {{ asset.vendorjs('vue-resource/dist/vue-resource.min.js') }}
 {{ asset.vendorjs('lodash/dist/lodash.min.js') }}
 {{ asset.vendorjs('moment/min/moment.min.js') }}
 {{ asset.vendorjs('chart.js/dist/Chart.min.js') }}
-{# asset.unpkg('vue-select') #}
+{{ asset.vendorjs('vue-focus/dist/vue-focus.min.js') }}
 
 <script>
+  'use strict';
   var DEFAULT_DATE = '20130101';
   var FORECAST_DAYS = 5;
   var SKIP_INCREMENT = FORECAST_DAYS;  // in days
@@ -175,12 +210,14 @@ Underground, Weather, Open Weather Map,
           data:
             _.map(_.range(0, FORECAST_DAYS), function(x){ return 10*x + 15 }),
           backgroundColor: '#36a2eb',
+          // backgroundColor: '#3a87ad',  // Bootstrap (2?) colors
         },
         {
           label: 'High Temperatures (°F)',
           data:
             _.map(_.range(0, FORECAST_DAYS), function(x){ return 10*x + 20 }),
           backgroundColor: '#ff6384'
+          // backgroundColor: '#b94a48',  // Boostrap (2?) colors
         },
       ]
     },
@@ -193,11 +230,23 @@ Underground, Weather, Open Weather Map,
     }
   }); // new Chart
 
+  // Source: https://vuejs.org/v2/api/#keyCodes
+  Vue.config.keyCodes = {
+    up: [38, 87],    // up arrow or 'w'
+    down: [40, 83],  // down arrow or 's'
+    pgup: [33],
+    pgdn: [34],
+  };
 
   var f = new Vue({
     el: '#weatherSearchForm',
+
+    mixins: [ VueFocus.mixin ],
+
     data: {
-      theDate: null,
+      theDate: '',
+      inputDate: '',
+      inputDateFocused: true,
       resetEnabled: false,
       forecastDates: [],
       getDateFailed: false,
@@ -205,34 +254,32 @@ Underground, Weather, Open Weather Map,
       skipDays: SKIP_INCREMENT,
     },
 
+    mounted: function() {
+        this.loadSampleData();
+    },
+
     methods: {
-      mounted: function() {
-          c.updateChartTitle(this.skipDays);
+
+      inputDateUpdated: function() {
+        this.theDate = this.inputDate.replace(/-/g, '');
+        this.getForecast();
       },
 
-      getForecast: function(e) {
-        this.$http.get('/forecast/' + this.theDate, {
-          params: {
-            limit: this.skipDays,
-          }
-        }).then(function(res) {
-          this.forecastDates = res.data;
-          // Update the Chart.js chart
-          chart.data.labels =
-            _.map(_.map(this.forecastDates, 'DATE'), this.isoDate);
-          chart.data.datasets[0].data = _.map(this.forecastDates, 'TMIN');
-          chart.data.datasets[1].data = _.map(this.forecastDates, 'TMAX');
-          chart.update();
-          c.updateChartTitle(this.skipDays);
-          // Clear errors and enable the reset button
-          this.resetEnabled = true;
-          this.getDateFailed = false;
-        }, function(res) {
-          this.getDateFailed = true;
-          console.log("Error fetching '" + this.theDate + "': " +
-                      res.statusText);
-        });
-      }, // onenter
+      skipDaysUpdated: function() {
+        this.skipDays = parseInt(this.skipDays);
+
+        // check for NaN or out-of-range values
+        if (!isFinite(this.skipDays)
+            || typeof this.skipDays !== 'number'
+            || this.skipDays < SKIP_INCREMENT)
+          this.skipDays = SKIP_INCREMENT;
+
+        else if (this.skipDays > 31)
+          this.skipDays = 31;
+
+        c.updateChartTitle();
+        this.getForecast();
+      },
 
       enableResetButton: function(e) {
         this.resetEnabled = true;
@@ -240,58 +287,123 @@ Underground, Weather, Open Weather Map,
 
       resetForm: function(e) {
         this.theDate = '';
+        this.inputDate = '';
+        this.inputDateFocused = true;
         this.resetEnabled = false;
         this.getDateFailed = false;
         this.forecastDates = [];
         this.skipDays = SKIP_INCREMENT;
-        chart.data.datasets[0].data = [];
-        chart.data.datasets[1].data = [];
-        chart.update();
-        c.resetChartTitle();
+        this.loadSampleData();
+        // c.resetChart();
       },
 
-      loadSampleData: function(e) {
-        this.theDate = DEFAULT_DATE;
-        this.getForecast();
+      loadSampleData: function() {
+        this.inputDate = this.isoDate(DEFAULT_DATE);
+        this.inputDateFocused = true;
+        this.inputDateUpdated();
       },
 
-      yearSkipStart: function(e) {
-        m = moment(this.theDate);
+      goToTodaysDate: function() {
+        var t = moment();  // today's date
+        var m = moment(this.inputDate);
+
+        // account for leap years (Feb 29th is the 60th day of the year)
+        if (!m.isLeapYear() && t.isLeapYear() && t.dayOfYear() === 60) {
+          m.dayOfYear(59);  // set the date to Feb 28th
+        } else {
+          m.dayOfYear(t.dayOfYear());
+        }
+
+        this.inputDate = m.format('YYYY-MM-DD');
+        this.inputDateUpdated();
+      },
+
+      getForecast: function() {
+        this.$http.get('/forecast/' + this.theDate, {
+          params: {
+            limit: this.skipDays,
+          }
+        }).then(function(res) {
+          this.forecastDates = res.data;
+          // Clear errors and enable the reset button
+          this.getDateFailed = false;
+          this.resetEnabled = true;
+          // update the Chart.js chart with the new forecastDates
+          c.updateChart();
+        }, function(res) {
+          this.getDateFailed = true;
+          console.log("Error fetching '" + this.theDate + "': " +
+                      res.statusText);
+        }); // this.$http.get
+
+      }, // getForecast
+
+      dayAdvance: function() {
+        // FIXME: Just store the internal date as a moment for easier math
+        this.inputDate = moment(this.inputDate).add(moment.duration(1, 'd'))
+                                               .format('YYYY-MM-DD')
+        this.inputDateUpdated();
+      },
+
+      dayRewind: function() {
+        this.inputDate = moment(this.inputDate).subtract(moment.duration(1, 'd'))
+                                               .format('YYYY-MM-DD')
+        this.inputDateUpdated();
+      },
+
+      yearAdvance: function() {
+        this.inputDate = moment(this.inputDate).add(moment.duration(1, 'y'))
+                                               .format('YYYY-MM-DD')
+        this.inputDateUpdated();
+      },
+
+      yearRewind: function() {
+        this.inputDate = moment(this.inputDate).subtract(moment.duration(1, 'y'))
+                                               .format('YYYY-MM-DD')
+        this.inputDateUpdated();
+      },
+
+      yearSkipStart: function() {
+        var m = moment(this.inputDate);
+        // if already in first forecast period of the year, go back another
         if (m.dayOfYear() === 1) {
-          this.theDate = m.year(m.year() - 1).format('YYYYMMDD')
+          this.inputDate = m.year(m.year() - 1).format('YYYY-MM-DD')
         } else {
-          this.theDate =
-            moment(this.theDate).dayOfYear(1).format('YYYYMMDD');
+          this.inputDate =
+              moment(this.inputDate).dayOfYear(1).format('YYYY-MM-DD');
         }
-        this.getForecast();
+        this.inputDateUpdated();
       },
 
-      daySkipPrev: function(e) {
-        skipMoment = moment.duration(this.skipDays, 'days');
-        this.theDate =
-          moment(this.theDate).subtract(skipMoment).format('YYYYMMDD');
-        this.getForecast();
+      periodSkipPrev: function() {
+        var skipMoment = moment.duration(this.skipDays, 'days');
+        this.inputDate =
+            moment(this.inputDate).subtract(skipMoment).format('YYYY-MM-DD');
+        this.inputDateUpdated();
       },
 
-      daySkipNext: function(e) {
-        skipMoment = moment.duration(this.skipDays, 'days');
-        this.theDate =
-          moment(this.theDate).add(skipMoment).format('YYYYMMDD');
-        this.getForecast();
+      periodSkipNext: function() {
+        var skipMoment = moment.duration(this.skipDays, 'days');
+        this.inputDate =
+            moment(this.inputDate).add(skipMoment).format('YYYY-MM-DD');
+        this.inputDateUpdated();
       },
 
-      yearSkipEnd: function(e) {
-        m = moment(this.theDate);
-        daysInYear = m.isLeapYear() ? 366 : 365;
-        startOfLastForecast = m.dayOfYear(daysInYear - this.skipDays + 1);
+      yearSkipEnd: function() {
+        var m = moment(this.inputDate);
+        var daysInYear = m.isLeapYear() ? 366 : 365;
+        var startOfFinalForecastPeriod = m.clone()
+        startOfFinalForecastPeriod.dayOfYear(daysInYear - this.skipDays + 1);
 
-        // If already in the last week, skip to the last week of the next year
-        if (m.diff(startOfLastForecast) <= this.skipDays) {
-          this.theDate = m.year(m.year() + 1).format('YYYYMMDD');
-        } else {
-          this.theDate = startOfLastForecast.format('YYYYMMDD');
+        // If already *in* the last forecast period of the year, skip to the
+        // last week of the next year
+        if (m.diff(startOfFinalForecastPeriod, 'days') >= 0) {
+          var nextYear = m.year() + 1;
+          startOfFinalForecastPeriod.year(nextYear);
         }
-        this.getForecast();
+
+        this.inputDate = startOfFinalForecastPeriod.format('YYYY-MM-DD');
+        this.inputDateUpdated();
       },
 
       isoDate: function (date) {
@@ -300,21 +412,21 @@ Underground, Weather, Open Weather Map,
       },
 
       skipInEnglish: function(dir) {
-        stems = [ 'zero', 'one', 'two', 'three', 'four', 'five', 'six',
-                  'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve',
-                  'thir', 'four', 'fif', 'six', 'seven', 'eigh', 'nine'];
+        var stems = [ 'zero', 'one', 'two', 'three', 'four', 'five', 'six',
+                      'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve',
+                      'thir', 'four', 'fif', 'six', 'seven', 'eigh', 'nine'];
         return 'Skip ' + dir + ' ' + stems[this.skipDays]
                + (this.skipDays > 12 ? 'teen' : '')
                + (this.skipDays !== 1 ? ' days' : 'day');
       },
 
       isFreezing: function(temp) {
-        if (temp === '' || typeof(temp) === 'undefined') return '';
+        if (temp === '' || typeof temp === 'undefined') return '';
         return temp <= 32;
       },
 
       isSweltering: function(temp) {
-        if (temp === '' || typeof(temp) === 'undefined') return '';
+        if (temp === '' || typeof temp === 'undefined') return '';
         return temp >= 90;
       },
 
@@ -329,24 +441,43 @@ Underground, Weather, Open Weather Map,
       chartTitle: 'Highs & Lows',
       chartDimmed: false,
     },
+
+    mounted: function() {
+      this.updateChartTitle();
+    },
+
     methods: {
-      mounted: function() {
-        this.resetChartTitle();
-      },
 
       resetChartTitle: function() {
         this.chartTitle = this.defaultTitle;
       },
 
-      updateChartTitle: function(days) {
-        this.chartTitle = this.daysInEnglish(days) + ' ' + this.defaultTitle;
+      updateChartTitle: function() {
+        this.chartTitle = this.daysInEnglish(f.skipDays) + ' '
+                        + this.defaultTitle;
+      },
+
+      updateChart: function() {
+        chart.data.labels =
+          _.map(_.map(f.forecastDates, 'DATE'), f.isoDate);
+        chart.data.datasets[0].data = _.map(f.forecastDates, 'TMIN');
+        chart.data.datasets[1].data = _.map(f.forecastDates, 'TMAX');
+        chart.update();
+        this.updateChartTitle();
+      },
+
+      resetChart: function() {
+        chart.data.datasets[0].data = [];
+        chart.data.datasets[1].data = [];
+        chart.update();
+        this.resetChartTitle();
       },
 
       daysInEnglish: function(days) {
         if (days > 19) return days + '-day';
-        stems = [ 'Zero', 'One', 'Two', 'Three', 'Four', 'Five', 'Six',
-                  'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve',
-                  'Thir', 'Four', 'Fif', 'Six', 'Seven', 'Eigh', 'Nine'];
+        var stems = [ 'Zero', 'One', 'Two', 'Three', 'Four', 'Five', 'Six',
+                      'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve',
+                      'Thir', 'Four', 'Fif', 'Six', 'Seven', 'Eigh', 'Nine'];
         return stems[days] + (days > 12 ? 'teen' : '') + '-day';
       },
     },
