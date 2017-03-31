@@ -11,7 +11,13 @@ setup(
         'weatherapi',
     ],
     install_requires=requires,
-    include_package_data=True,
+    package_data={
+        'weatherapi': [
+            'weatherapi/helpers/*.py',
+            'weatherapi/static/*',
+            'weatherapi/templates/*'
+        ]
+    },
     #entry_points='''
     #    [console_scripts]
     #    starter=flask_starter.cli:main
