@@ -5,36 +5,35 @@ CS5165 Homework #2 - Weather REST API
 [API specification](http://docs.cs5165weatherapi.apiary.io)
 ([Apiary Blueprint][apiarybp] format, with interactive console)
 
-## Assignment 
-
-Your assignment will be graded on the following metrics:
-
-* <strike>Does the output conform exactly to the specifications?</strike>
-* <strike>Is the [REST.md](REST.md) well-formatted markdown and
-  complete?</strike>
-* <strike>Are the HTTP codes correct ? Example - 200 for OK. 201 for created.
-  404 for not found and so on.</strike>
-* <strike>Does the REST API accept the inputs as GET or POST
-  parameters?</strike>
-* <strike>Is the result well-formed (does it adhere to JSON or XML standards) and
-  returned as an HTTP 200 “Ok” result?</strike>
-* <strike>Does the REST API yield results consistent with the same
-  data?</strike>
-
-You will also need to add a [`REST.md`](REST.md) “markdown” document to your
-GitHub, and document the resources in your API, the input parameters
-+ data-types they accept, and the parameters &amp; data-types that will be in
-the results.
-
 ## System Requirements
 
-* Python 2.7.x (3.x untested)
-* virtualenv
-* pip
+* Python 2.7.x (3.x should also be OK)
+* [virtualenv][]
+* [pip][]
+* [npm][] (web assets are managed with [Bower][])
 
-These should part of most standard Python kits. Try typing `virtualenv --help`
-or `pip --help` at the command line to see if they're already installed on your
-system.
+Virtualenv and pip should part of most standard Python kits. Try typing
+`virtualenv --help` or `pip --help` at the command line to see if they're
+already installed on your system.
+
+The `npm` command usually comes with Node.js package; sometimes the binary
+package in your distro's "contrib" repository are okay. You would need to
+install Bower with `npm install bower` (possibly with the `-g` option) before
+continuing, otherwise the web application won't work.
+
+### Docker image
+
+A [Docker image][img] is available so you don't have to install anything
+(except [Docker][]).
+
+<abbr title="31 March 2017">As of this writing</abbr>, there are official
+desktop clients for [OS X / macOS][docker-mac] and [Windows][docker-win];
+the older Docker Toolbox for Mac might work OK, too. Use your distro's
+package manager to install the [appropriate package][docker-pkgs] if you use
+GNU/Linux.
+
+For installation details, see the "[Docker image installation](#docker-image-installation)" 
+section below.
 
 ## Installation
 
@@ -61,11 +60,17 @@ system.
     ```
     pip install --editable .
 
-    # possibly also works:
-    pip install -r requirements.txt
+    # this would also work:
+    #   $ pip install -r requirements.txt
     ```
 
-3. Launch the Flask web application:
+3. Install JavaScript and CSS dependencies with Bower:
+
+    ```
+    bower install
+    ```
+
+4. Launch the Flask web application:
 
     ```
     # on Windows, do 'set FLASK_APP=weatherapi\api.py' (note the backslash)
@@ -86,6 +91,27 @@ system.
     ```
     flask run --host=0.0.0.0  # optionally: --port=5000
     ```
+
+### Docker image installation
+
+This requires that you have either the desktop client for [Mac][docker-mac] or
+[Windows][docker-win] installed. On GNU/Linux, use your distro's package
+manager to install the [appropriate binary package][docker-pkgs].
+
+Then issue these commands at the command prompt:
+
+```bash
+IMG=http://homepages.uc.edu/~ernstki/17FS_CS5165/p01-docker-img.tar.gz
+docker import $IMG ernstki/p01
+docker run --rm -it -p 5000:5000 ernstki/p01 /startme.sh
+
+# on Windows, do this instead:
+#   > set IMG=http://homepages.uc.edu/~ernstki/17FS_CS5165/p01-docker-img.tar.gz
+#   > docker import %IMG% ernstki/p01
+```
+
+...and visit <http://localhost:5000> in your browser. Press **Ctrl + C** to
+stop the web server (and delete the Docker container).
 
 ## Running automated tests
 
@@ -121,3 +147,12 @@ under the terms of the MIT license ([ref1][glyphlicense], [ref2][bslicense]).
 [bootstrap]: https://getbootstrap.com/
 [glyphlicense]: https://glyphicons.com/license/
 [bslicense]: https://github.com/twbs/bootstrap/blob/master/LICENSE
+[virtualenv]: https://virtualenv.pypa.io/en/stable/
+[pip]: https://pip.pypa.io/en/stable/
+[npm]: https://docs.npmjs.com/getting-started/installing-node
+[bower]: https://bower.io/
+[docker]: https://docs.docker.com/
+[docker-mac]: https://www.docker.com/docker-mac
+[docker-win]: https://www.docker.com/docker-windows
+[docker-pkgs]: https://pkgs.org/download/docker
+[img]: http://homepages.uc.edu/~ernstki/17FS_CS5165/p01-docker-img.tar.gz 
