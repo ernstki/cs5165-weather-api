@@ -1,4 +1,4 @@
-# 17FS_CS5165 Weather API
+# 17SS_CS5165 Weather API
 CS5165 Homework #2 - Weather REST API
 
 [Live server](http://cs5165ernstki.ddns.net) | 
@@ -101,12 +101,12 @@ manager to install the [appropriate binary package][docker-pkgs].
 Then issue these commands at the command prompt:
 
 ```bash
-IMG=http://homepages.uc.edu/~ernstki/17FS_CS5165/p01-docker-img.tar.gz
+IMG=http://homepages.uc.edu/~ernstki/17SS_CS5165/p01-docker-img.tar.gz
 docker import $IMG ernstki/p01
 docker run --rm -it -p 5000:5000 ernstki/p01 /startme.sh
 
 # on Windows, do this instead:
-#   > set IMG=http://homepages.uc.edu/~ernstki/17FS_CS5165/p01-docker-img.tar.gz
+#   > set IMG=http://homepages.uc.edu/~ernstki/17SS_CS5165/p01-docker-img.tar.gz
 #   > docker import %IMG% ernstki/p01
 ```
 
@@ -155,4 +155,4 @@ under the terms of the MIT license ([ref1][glyphlicense], [ref2][bslicense]).
 [docker-mac]: https://www.docker.com/docker-mac
 [docker-win]: https://www.docker.com/docker-windows
 [docker-pkgs]: https://pkgs.org/download/docker
-[img]: http://homepages.uc.edu/~ernstki/17FS_CS5165/p01-docker-img.tar.gz 
+[img]: http://homepages.uc.edu/~ernstki/17SS_CS5165/p01-docker-img.tar.gz 
