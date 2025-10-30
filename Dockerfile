@@ -1,33 +1,14 @@
-# Create a container from Ubuntu.
-#FROM python:3
-#FROM alpine
-FROM amancevice/pandas
-
-EXPOSE 5000
-
-# Credits.
+FROM alpine
 MAINTAINER Kevin Ernst "ernstki@mail.uc.edu"
 
-# Update distro's repositories.
-#RUN apt-get update
-#RUN apk update
-
-# Install Python (these were for Debian-derived distros)
-#RUN apt-get install -y -q build-essential
-#RUN apt-get install -y python python-pip curl wget
-#RUN apt-get install -y python-dev
-#RUN apt-get install -y npm nodejs-legacy
-
 # Install Python and build essentials (Alpine)
-#RUN apk add --no-cache build-base
-#RUN apk add --no-cache python python-dev py-pip 
-# I /think/ this brings in npm
-RUN apk add --no-cache nodejs
+RUN apk add --no-cache build-base
+# https://stackoverflow.com/a/62555259
+ENV PYTHONUNBUFFERED=1
+RUN apk add --update --no-cache python3 && ln -sf python3 /usr/bin/python
 
-# Install any necessary (global) Python packages
-RUN pip install virtualenv
-
-# Install any necessary Node packages
+# Install any necessary Node packages; Bower will require Git
+RUN apk add --no-cache nodejs npm git
 RUN npm install -g bower
 
 # Create a working directory.
@@ -46,11 +27,13 @@ ADD startme.sh /startme.sh
 
 # Set up virtualenv (allowing access to global 'site-packages')
 WORKDIR /deploy
-RUN virtualenv --system-site-packages venv
+RUN python -m venv venv
 RUN venv/bin/pip install -r requirements.txt
 
 # Run Bower installation
 RUN bower --allow-root install
+
+EXPOSE 5000
 
 # Source: https://docs.docker.com/engine/reference/builder/#entrypoint
 # See also: https://github.com/krallin/tini#using-tini

@@ -5,12 +5,12 @@ import re
 import click
 import pandas as pd
 import numpy as np
-from flask import Flask, Markup, Response, request, render_template, \
-                  jsonify
+from flask import Flask, Response, request, render_template, jsonify
+from markupsafe import Markup
 from flask_restful import abort, reqparse, Resource, Api
 from werkzeug.exceptions import BadRequestKeyError
 
-from helpers import register_jinja_helpers
+from .helpers import register_jinja_helpers
 
 app = Flask(__name__)
 api = Api(app)  # Flask-Restful API object
@@ -27,7 +27,7 @@ app.config.update(
 # ref: http://pandas.pydata.org/pandas-docs/stable/io.html#specifying-column-data-types
 weather = pd.read_csv(app.config['CSV_FILE'],
                       header=0,
-                      dtype={'DATE': np.str})
+                      dtype={'DATE': str})
 
 
 # A request parser for GETs and POSTs (the entire date object, all keys req'd)
@@ -55,7 +55,7 @@ def check_date(date):
     """
     if not date:
         abort(500, message="Error checking date (null input value)")
-    if not re.match('\d{8}$', date):
+    if not re.match(r'\d{8}$', date):
         abort(400, message="Invalid date '%s'; did not match pattern" % date)
     if not date in weather[['DATE']].values:
         abort(404, message="No data found for %s" % date)
@@ -82,9 +82,9 @@ def add_date():
 
 
 # props to https://stackoverflow.com/a/26961568
-def df_to_reponse(df):
+def df_to_response(df):
     """
-    Make an 'application/json' reponse for a Pandas dataframe
+    Make an 'application/json' response for a Pandas dataframe
     """
     # if there's only one record, un-arrayify it:
     if len(df) == 1:
@@ -117,16 +117,16 @@ class Temps(Resource):
 
         # what we normally expect; no query string args, return all dates
         if not any(args.values()):
-            return df_to_reponse(weather[['DATE']])
+            return df_to_response(weather[['DATE']])
 
         # if DATE and only DATE in query string:
         if not args.TMIN and not args.TMAX:
             check_date(args.DATE)  # maybe overkill?
-            return df_to_reponse(
+            return df_to_response(
                 weather[weather.DATE == args.DATE]
             )
         else:
-            # This will report any missing keys with a 400 reponse
+            # This will report any missing keys with a 400 response
             return add_date()
 
 
@@ -148,7 +148,7 @@ class Temp(Resource):
         Return temperature data for a single date
         """
         check_date(date)
-        return df_to_reponse(weather[weather.DATE == date])
+        return df_to_response(weather[weather.DATE == date])
 
     def delete(self, date):
         """
@@ -180,7 +180,7 @@ class Forecast(Resource):
 
         check_date(date)
         starti = weather.index[weather.DATE == date][0]
-        return df_to_reponse(weather[starti:starti + limit])
+        return df_to_response(weather[starti:starti + limit])
 
 
 api.add_resource(Temps, '/historical/')

@@ -1,4 +1,4 @@
-import j2_functions as functions
+from . import j2_functions as functions
 #import j2_filters as filters
 
 def register_jinja_helpers(app):

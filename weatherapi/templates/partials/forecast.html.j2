@@ -322,6 +322,7 @@ Underground, Weather, Open Weather Map,
         this.$http.get('/forecast/' + this.theDate, {
           params: {
             limit: this.skipDays,
+            responseType: 'json',
           }
         }).then(function(res) {
           this.forecastDates = res.data;
