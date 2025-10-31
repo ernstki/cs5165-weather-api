@@ -5,12 +5,25 @@ import re
 import click
 import pandas as pd
 import numpy as np
-from flask import Flask, Response, request, render_template, jsonify
 from markupsafe import Markup
+from flask import (Flask as Flask_, Request as Request_, Response,
+                   render_template, jsonify)
 from flask_restful import abort, reqparse, Resource, Api
 from werkzeug.exceptions import BadRequestKeyError
 
 from .helpers import register_jinja_helpers
+
+
+# https://github.com/python-restx/flask-restx/issues/454#issuecomment-1185615974
+class Request(Request_):
+    def get_json(self, *args, **kwargs):
+        kwargs.update(silent=True)
+        return super().get_json(*args, **kwargs)
+
+
+class Flask(Flask_):
+    request_class = Request
+
 
 app = Flask(__name__)
 api = Api(app)  # Flask-Restful API object
@@ -32,11 +45,11 @@ weather = pd.read_csv(app.config['CSV_FILE'],
 
 # A request parser for GETs and POSTs (the entire date object, all keys req'd)
 date_parser = reqparse.RequestParser(trim=True)
-date_parser.add_argument('DATE', type=str, required=True,
+date_parser.add_argument('DATE', type=str, required=True, location='json',
                          help='Invalid date (expected: YYYYMMDD as string)')
-date_parser.add_argument('TMIN', type=float, required=True,
+date_parser.add_argument('TMIN', type=float, required=True, location='json',
                          help='Invalid temperature (expected: floating point)')
-date_parser.add_argument('TMAX', type=float, required=True,
+date_parser.add_argument('TMAX', type=float, required=True, location='json',
                          help='Invalid temperature (expected: floating point)')
 
 # Same parser, but with all arguments optional (used to check which ones exist)

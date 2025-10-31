@@ -1,14 +1,15 @@
 # 17SS_CS5165 Weather API
 CS5165 Homework #2 - Weather REST API
 
-[Live server](http://cs5165ernstki.ddns.net) | 
+[![Screenshot of the forecast UI](img/screenshot.png)](img/screenshot.png)
+
+~~[Live server](http://cs5165ernstki.ddns.net)~~ | 
 [API specification](http://docs.cs5165weatherapi.apiary.io)
 ([Apiary Blueprint][apiarybp] format, with interactive console)
 
 ## System Requirements
 
-* Python 2.7.x (3.x should also be OK)
-* [virtualenv][]
+* Python 3.x (tested with 3.12)
 * [pip][]
 * [npm][] (web assets are managed with [Bower][])
 
@@ -101,17 +102,15 @@ manager to install the [appropriate binary package][docker-pkgs].
 Then issue these commands at the command prompt:
 
 ```bash
-IMG=http://homepages.uc.edu/~ernstki/17SS_CS5165/p01-docker-img.tar.gz
-docker import $IMG ernstki/p01
-docker run --rm -it -p 5000:5000 ernstki/p01 /startme.sh
-
-# on Windows, do this instead:
-#   > set IMG=http://homepages.uc.edu/~ernstki/17SS_CS5165/p01-docker-img.tar.gz
-#   > docker import %IMG% ernstki/p01
+git clone https://github.com/ernstki/cs5165-weather-api.git
+cd cs5165-weather-api
+docker build -t weatherapi .
+docker run --rm weatherapi
 ```
 
-...and visit <http://localhost:5000> in your browser. Press **Ctrl + C** to
-stop the web server (and delete the Docker container).
+...and visit the displayed URL(s) in your browser until you find one that
+worked. Press **Ctrl + C** three times to stop the web server (and delete the
+Docker container).
 
 ## Running automated tests
 

@@ -31,7 +31,19 @@ RUN python -m venv venv
 RUN venv/bin/pip install -r requirements.txt
 
 # Run Bower installation
-RUN bower --allow-root install
+RUN bower -f install
+# Build minified Vue library because ¯\_(ツ)_/¯
+WORKDIR /deploy/weatherapi/static/vendor/vue
+# pnpm works around some dumb error in the package.json
+# source: https://stackoverflow.com/a/78927532
+RUN npm install -g pnpm
+RUN pnpm install
+# source: https://bobbyhadz.com/blog/javascript-heap-out-of-memory
+# the default appears to be 1.4 GB regardless of system RAM
+# (source: https://dev.to/evle/what-exactly-is-the-memory-limit-of-nodejs-4cpi)
+RUN NODE_OPTIONS=--max-old-space-size=4096 pnpm build
+# clean up after the 'npm build'
+RUN rm -rf node_modules packages src test
 
 EXPOSE 5000
 
