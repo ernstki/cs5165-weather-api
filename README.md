@@ -1,4 +1,4 @@
-# 17SS_CS5165 Weather API
+# 17SS\_CS5165 Weather API
 CS5165 Homework #2 - Weather REST API
 
 [![Screenshot of the forecast UI](img/screenshot.png)](img/screenshot.png)
@@ -12,15 +12,18 @@ CS5165 Homework #2 - Weather REST API
 * Python 3.x (tested with 3.12)
 * [pip][]
 * [npm][] (web assets are managed with [Bower][])
+* at least 4 GB of system RAM, [because Node.js][nodeoptions], I guess
 
-Virtualenv and pip should part of most standard Python kits. Try typing
-`virtualenv --help` or `pip --help` at the command line to see if they're
-already installed on your system.
+pip should part of most standard Python kits; try typing `pip --help` at the
+command line to see if it's already installed on your system.
 
 The `npm` command usually comes with Node.js package; sometimes the binary
 package in your distro's "contrib" repository are okay. You would need to
 install Bower with `npm install bower` (possibly with the `-g` option) before
 continuing, otherwise the web application won't work.
+
+Alternatively, just follow the instructions below to build the (1.6 GB —
+yikes!) container image, which will already contain the necessary dependencies.
 
 ### Docker image
 
@@ -105,12 +108,11 @@ Then issue these commands at the command prompt:
 git clone https://github.com/ernstki/cs5165-weather-api.git
 cd cs5165-weather-api
 docker build -t weatherapi .
-docker run --rm weatherapi
+docker run -it --rm -p 127.0.0.1:5000:5000 weatherapi
 ```
 
-...and visit the displayed URL(s) in your browser until you find one that
-worked. Press **Ctrl + C** three times to stop the web server (and delete the
-Docker container).
+...and visit http://127.0.0.1:5000 in your browser. Press **Ctrl + C** three
+times to stop the web server (and delete the Docker container).
 
 ## Running automated tests
 
@@ -150,6 +152,7 @@ under the terms of the MIT license ([ref1][glyphlicense], [ref2][bslicense]).
 [pip]: https://pip.pypa.io/en/stable/
 [npm]: https://docs.npmjs.com/getting-started/installing-node
 [bower]: https://bower.io/
+[nodeoptions]: https://github.com/ernstki/cs5165-weather-api/blob/f8b7d390b3d26f99bdc78fa879fa678545ced84f/Dockerfile#L41-L44
 [docker]: https://docs.docker.com/
 [docker-mac]: https://www.docker.com/docker-mac
 [docker-win]: https://www.docker.com/docker-windows
